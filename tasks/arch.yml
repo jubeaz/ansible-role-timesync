@@ -1,0 +1,5 @@
+---
+- name: "[TZ] uninstall ntp"
+  pacman:
+    name: ntp
+    state: absent
