@@ -1,10 +1,13 @@
 ---
-- include_tasks: ubuntu.yml
-  when: ansible_distribution == "Ubuntu"
-- include_tasks: arch.yml
-  when: ansible_distribution == "Archlinux"
+- name: assert proper distribution
+  assert:
+    that:
+      - ansible_distribution in ['Kali', 'Ubuntu', 'Archlinux']
+    quiet: true
 
-- name: "Install timesyncd config"
+- include_tasks: "{{ ansible_distribution }}.yml" 
+
+- name: Install timesyncd config
   template:
     src: templates/timesyncd.conf.j2
     dest: /etc/systemd/timesyncd.conf
@@ -13,16 +16,16 @@
     group: root
   notify: Enable systemd-timesyncd
 
-- name: "Get timezone"
+- name: Get timezone
   command: timedatectl status
   changed_when: false
   check_mode: false
   register: __timedatectl
 
-- name: "Set timezone"
+- name: Set timezone
   command: /usr/bin/timedatectl set-timezone {{ tz_timezone }}
   when: 'tz_timezone |string not in __timedatectl.stdout'
 
-- name: "Set ntp on"
+- name: Set ntp on
   command: /usr/bin/timedatectl set-ntp on
   when: '"NTP service: active" not in __timedatectl.stdout'
